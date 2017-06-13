@@ -20,7 +20,7 @@ import com.univocity.parsers.common.CommonParserSettings;
 import java.util.Map;
 
 /**
- * This is the configuration class used by the TSV parser ({@link SsvParser})
+ * This is the configuration class used by the SSV parser ({@link SsvParser})
  *
  * <p>It supports the configuration options provided by {@link CommonParserSettings} only
  *

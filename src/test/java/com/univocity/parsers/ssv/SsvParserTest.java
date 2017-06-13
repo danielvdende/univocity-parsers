@@ -32,27 +32,27 @@ import static org.testng.Assert.assertEquals;
 
 public class SsvParserTest extends ParserTestCase {
 
-	@DataProvider(name = "tsvProvider")
-	public Object[][] tsvProvider() {
+	@DataProvider(name = "ssvProvider")
+	public Object[][] ssvProvider() {
 		return new Object[][]{
-				{"/tsv/essential.tsv", new char[]{'\n'}},
-				{"/tsv/essential-dos.tsv", new char[]{'\r', '\n'}},
-				{"/tsv/essential.tsv", null},
-				{"/tsv/essential-dos.tsv", null},
-				{"/tsv/essential-mac.tsv", null}
+				{"/ssv/essential.ssv", new char[]{'\n'}},
+				{"/ssv/essential-dos.ssv", new char[]{'\r', '\n'}},
+				{"/ssv/essential.ssv", null},
+				{"/ssv/essential-dos.ssv", null},
+				{"/ssv/essential-mac.ssv", null}
 		};
 	}
 
-	@Test(enabled = true, dataProvider = "tsvProvider")
-	public void parseIgnoringWhitespaces(String tsvFile, char[] lineSeparator) throws Exception {
-		TsvParserSettings settings = newTsvInputSettings(lineSeparator);
+	@Test(enabled = true, dataProvider = "ssvProvider")
+	public void parseIgnoringWhitespaces(String ssvFile, char[] lineSeparator) throws Exception {
+		SsvParserSettings settings = newSsvInputSettings(lineSeparator);
 		settings.setRowProcessor(processor);
 		settings.setHeaderExtractionEnabled(true);
 		settings.setIgnoreLeadingWhitespaces(true);
 		settings.setIgnoreTrailingWhitespaces(true);
 
-		TsvParser parser = new TsvParser(settings);
-		parser.parse(newReader(tsvFile));
+		SsvParser parser = new SsvParser(settings);
+		parser.parse(newReader(ssvFile));
 
 		String[] expectedHeaders = new String[]{"Year", "Make", "Model", "Description", "Price"};
 
@@ -77,8 +77,8 @@ public class SsvParserTest extends ParserTestCase {
 		assertHeadersAndValuesMatch(expectedHeaders, expectedResult);
 	}
 
-	protected TsvParserSettings newTsvInputSettings(char[] lineSeparator) {
-		TsvParserSettings out = new TsvParserSettings();
+	protected SsvParserSettings newSsvInputSettings(char[] lineSeparator) {
+		SsvParserSettings out = new SsvParserSettings();
 		if (lineSeparator == null) {
 			out.setLineSeparatorDetectionEnabled(true);
 		} else {
@@ -87,17 +87,17 @@ public class SsvParserTest extends ParserTestCase {
 		return out;
 	}
 
-	@Test(enabled = true, dataProvider = "tsvProvider")
-	public void parseUsingWhitespaces(String tsvFile, char[] lineSeparator) throws Exception {
-		TsvParserSettings settings = newTsvInputSettings(lineSeparator);
+	@Test(enabled = true, dataProvider = "ssvProvider")
+	public void parseUsingWhitespaces(String ssvFile, char[] lineSeparator) throws Exception {
+		SsvParserSettings settings = newSsvInputSettings(lineSeparator);
 		settings.setRowProcessor(processor);
 		settings.setHeaderExtractionEnabled(true);
 		settings.setNullValue("?????");
 		settings.setIgnoreLeadingWhitespaces(false);
 		settings.setIgnoreTrailingWhitespaces(false);
 
-		TsvParser parser = new TsvParser(settings);
-		parser.parse(newReader(tsvFile));
+		SsvParser parser = new SsvParser(settings);
+		parser.parse(newReader(ssvFile));
 
 		String[] expectedHeaders = new String[]{"Year", "Make", "Model", "Description", "Price"};
 
@@ -123,9 +123,9 @@ public class SsvParserTest extends ParserTestCase {
 		assertHeadersAndValuesMatch(expectedHeaders, expectedResult);
 	}
 
-	@Test(enabled = true, dataProvider = "tsvProvider")
-	public void parseColumns(String tsvFile, char[] lineSeparator) throws Exception {
-		TsvParserSettings settings = newTsvInputSettings(lineSeparator);
+	@Test(enabled = true, dataProvider = "ssvProvider")
+	public void parseColumns(String ssvFile, char[] lineSeparator) throws Exception {
+		SsvParserSettings settings = newSsvInputSettings(lineSeparator);
 		settings.setRowProcessor(processor);
 		settings.setHeaderExtractionEnabled(true);
 		settings.setIgnoreLeadingWhitespaces(true);
@@ -133,8 +133,8 @@ public class SsvParserTest extends ParserTestCase {
 		settings.selectFields("Year");
 		settings.setColumnReorderingEnabled(false);
 
-		TsvParser parser = new TsvParser(settings);
-		parser.parse(newReader(tsvFile));
+		SsvParser parser = new SsvParser(settings);
+		parser.parse(newReader(ssvFile));
 
 		String[] expectedHeaders = new String[]{"Year", "Make", "Model", "Description", "Price"};
 
@@ -162,7 +162,7 @@ public class SsvParserTest extends ParserTestCase {
 	private String[] process(String input, Integer[] indexesToExclude, Integer[] indexesToSelect, String[] fieldsToExclude, String[] fieldsToSelect) {
 		RowListProcessor processor = new RowListProcessor();
 		StringReader reader = new StringReader(input);
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setRowProcessor(processor);
 		settings.setHeaderExtractionEnabled(fieldsToExclude != null || fieldsToSelect != null);
 
@@ -176,7 +176,7 @@ public class SsvParserTest extends ParserTestCase {
 			settings.selectFields(fieldsToSelect);
 		}
 
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 		parser.parse(reader);
 
 		List<String[]> rows = processor.getRows();
@@ -233,9 +233,9 @@ public class SsvParserTest extends ParserTestCase {
 		};
 	}
 
-	@Test(enabled = true, dataProvider = "tsvProvider")
-	public void parseOneByOne(String tsvFile, char[] lineSeparator) throws Exception {
-		TsvParserSettings settings = newTsvInputSettings(lineSeparator);
+	@Test(enabled = true, dataProvider = "ssvProvider")
+	public void parseOneByOne(String ssvFile, char[] lineSeparator) throws Exception {
+		SsvParserSettings settings = newSsvInputSettings(lineSeparator);
 		settings.setRowProcessor(processor);
 		settings.setHeaderExtractionEnabled(true);
 		settings.setIgnoreLeadingWhitespaces(true);
@@ -243,9 +243,9 @@ public class SsvParserTest extends ParserTestCase {
 		settings.setHeaders("YR", "MK", "MDL", "DSC", "PRC");
 
 		List<Object[]> results = new ArrayList<Object[]>();
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 		try {
-			parser.beginParsing(newReader(tsvFile));
+			parser.beginParsing(newReader(ssvFile));
 
 			Object[] row = null;
 			while ((row = parser.parseNext()) != null) {
@@ -289,17 +289,17 @@ public class SsvParserTest extends ParserTestCase {
 		}
 	}
 
-	@Test(enabled = true, dataProvider = "tsvProvider")
-	public void parse3Records(String tsvFile, char[] lineSeparator) throws Exception {
-		TsvParserSettings settings = newTsvInputSettings(lineSeparator);
+	@Test(enabled = true, dataProvider = "ssvProvider")
+	public void parse3Records(String ssvFile, char[] lineSeparator) throws Exception {
+		SsvParserSettings settings = newSsvInputSettings(lineSeparator);
 		settings.setRowProcessor(processor);
 		settings.setHeaderExtractionEnabled(true);
 		settings.setIgnoreLeadingWhitespaces(true);
 		settings.setIgnoreTrailingWhitespaces(true);
 		settings.setNumberOfRecordsToRead(3);
 
-		TsvParser parser = new TsvParser(settings);
-		parser.parse(newReader(tsvFile));
+		SsvParser parser = new SsvParser(settings);
+		parser.parse(newReader(ssvFile));
 
 		String[] expectedHeaders = new String[]{"Year", "Make", "Model", "Description", "Price"};
 
@@ -315,11 +315,11 @@ public class SsvParserTest extends ParserTestCase {
 
 	@Test
 	public void parseWithLineJoining() {
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setLineJoiningEnabled(true);
 		settings.getFormat().setLineSeparator("\n");
 		settings.trimValues(false);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		List<String[]> result = parser.parseAll(new StringReader("A	B	\\\nC\n" +
 				"1	2	\\\n" +
@@ -332,10 +332,10 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseIgnoreTrailingWhitespaceAppendSlash() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("\\\\"));
 
@@ -349,10 +349,10 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseIgnoreTrailingWhitespaceAppendBreakLineR() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a\\r"));
 
@@ -366,12 +366,12 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseIgnoreTrailingWhitespaceJoinLines() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.getFormat().setLineSeparator("\n");
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(true);
 		settings.setLineJoiningEnabled(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a\\\nb"));
 
@@ -385,12 +385,12 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseIgnoreTrailingWhitespaceEscapeTab() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.getFormat().setLineSeparator("\n");
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(true);
 		settings.setLineJoiningEnabled(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a\\\tb"));
 
@@ -406,12 +406,12 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseIgnoreTrailingWhitespaceEscapeOther() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setRowProcessor(processor);
 		settings.getFormat().setLineSeparator("\n");
 		settings.setIgnoreTrailingWhitespaces(true);
 		settings.setLineJoiningEnabled(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a \\\bb"));
 
@@ -426,11 +426,11 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseNotIgnoreTrailingWhitespaceAppendBreakLineR() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.getFormat().setLineSeparator("\n");
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(false);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a \\r"));
 
@@ -445,11 +445,11 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseNotIgnoreTrailingWhitespaceEscapeTab() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(false);
 		settings.setLineJoiningEnabled(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a \\\tb"));
 
@@ -465,11 +465,11 @@ public class SsvParserTest extends ParserTestCase {
 	@Test
 	public void parseNotIgnoreTrailingWhitespaceEscapeOther() {
 		RowListProcessor processor = new RowListProcessor();
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setRowProcessor(processor);
 		settings.setIgnoreTrailingWhitespaces(false);
 		settings.setLineJoiningEnabled(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 
 		parser.parse(new StringReader("a \\\bb"));
 
@@ -488,11 +488,11 @@ public class SsvParserTest extends ParserTestCase {
 				"1\t2\t3\n" +
 				"4\t5\t6";
 
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.getFormat().setLineSeparator("\n");
 		settings.selectFields("h2", "h3", "h9", "h8");
 		settings.setHeaderExtractionEnabled(true);
-		TsvParser parser = new TsvParser(settings);
+		SsvParser parser = new SsvParser(settings);
 		List<String[]> rows = parser.parseAll(new StringReader(input));
 		assertEquals(rows.get(0)[0], "2");
 		assertEquals(rows.get(0)[1], "3");
@@ -509,7 +509,7 @@ public class SsvParserTest extends ParserTestCase {
 
 	@Test
 	public void parseWithAutoExpansion() {
-		TsvParserSettings settings = new TsvParserSettings();
+		SsvParserSettings settings = new SsvParserSettings();
 		settings.setMaxCharsPerColumn(-1);
 
 		StringBuilder in = new StringBuilder(100000);
@@ -520,7 +520,7 @@ public class SsvParserTest extends ParserTestCase {
 			}
 		}
 
-		String[] result = new TsvParser(settings).parseLine(in.toString());
+		String[] result = new SsvParser(settings).parseLine(in.toString());
 		StringBuilder out = new StringBuilder();
 		for(String value : result){
 			if(out.length() > 0){
@@ -534,10 +534,10 @@ public class SsvParserTest extends ParserTestCase {
 
 	@Test
 	public void testBitsAreNotDiscardedWhenParsing() {
-		TsvParserSettings parserSettings = new TsvParserSettings();
+		SsvParserSettings parserSettings = new SsvParserSettings();
 		parserSettings.setSkipBitsAsWhitespace(false);
 
-		TsvParser parser = new TsvParser(parserSettings);
+		SsvParser parser = new SsvParser(parserSettings);
 		String[] line;
 
 		line = parser.parseLine("\0 a\tb");

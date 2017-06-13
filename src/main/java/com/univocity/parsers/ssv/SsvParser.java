@@ -68,7 +68,7 @@ public class SsvParser extends AbstractParser<SsvParserSettings> {
 		}
 
 		while (ch != newLine) {
-			parseField();
+
 			if (ch != newLine) {
 				ch = input.nextChar();
 				if (ch == newLine) {
@@ -78,41 +78,4 @@ public class SsvParser extends AbstractParser<SsvParserSettings> {
 		}
 	}
 
-	private void parseField() {
-		if (ignoreLeadingWhitespace && ch != '\t' && ch <= ' ' && whitespaceRangeStart < ch) {
-			ch = input.skipWhitespace(ch, '\t', escapeChar);
-		}
-
-		if (ch == '\t') {
-			output.emptyParsed();
-		} else {
-			while (ch != '\t' && ch != newLine) {
-				if (ch == escapeChar) {
-					ch = input.nextChar();
-					if (ch == 't' || ch == escapedTabChar) {
-						output.appender.append('\t');
-					} else if (ch == 'n') {
-						output.appender.append('\n');
-					} else if (ch == '\\') {
-						output.appender.append('\\');
-					} else if (ch == 'r') {
-						output.appender.append('\r');
-					} else if (ch == newLine && joinLines) {
-						output.appender.append(newLine);
-					} else {
-						output.appender.append(escapeChar);
-						if (ch == newLine || ch == '\t') {
-							break;
-						}
-						output.appender.append(ch);
-					}
-					ch = input.nextChar();
-				} else {
-					ch = output.appender.appendUntil(ch, input, '\t', escapeChar, newLine);
-				}
-			}
-
-			output.valueParsed();
-		}
-	}
 }
