@@ -15,15 +15,14 @@
  ******************************************************************************/
 package com.univocity.parsers.ssv;
 
-import com.univocity.parsers.common.AbstractWriter;
+import com.univocity.parsers.common.*;
 
-import java.io.File;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.nio.charset.Charset;
+import java.io.*;
+import java.nio.charset.*;
+import java.util.*;
 
 /**
- * A powerful and flexible TSV writer implementation.
+ * A powerful and flexible CSV writer implementation.
  *
  * @author uniVocity Software Pty Ltd - <a href="mailto:parsers@univocity.com">parsers@univocity.com</a>
  * @see SsvFormat
@@ -32,141 +31,222 @@ import java.nio.charset.Charset;
  * @see AbstractWriter
  */
 public class SsvWriter extends AbstractWriter<SsvWriterSettings> {
-
+    // TODO: don't forget why it's called a separator here :) https://softwareengineering.stackexchange.com/questions/127783/comma-as-a-separator-vs-comma-as-a-delimiter
+	private String separator;
+	private char quoteChar;
+	private char escapeChar;
+	private char escapeEscape;
 	private boolean ignoreLeading;
 	private boolean ignoreTrailing;
-	private boolean joinLines;
-
-	private char escapeChar;
-	private char escapedTabChar;
+	private boolean quoteAllFields;
+	private boolean escapeUnquoted;
+	private boolean inputNotEscaped;
 	private char newLine;
+	private boolean dontProcessNormalizedNewLines;
+	private boolean[] quotationTriggers;
+	private char maxTrigger;
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
-	 * <p><strong>Important: </strong> by not providing an instance of {@link Writer} to this constructor, only the operations that write to Strings are available.</p>
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * <p><strong>Important: </strong> by not providing an instance of {@link java.io.Writer} to this constructor, only the operations that write to Strings are available.</p>
 	 *
-	 * @param settings the TSV writer configuration
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(SsvWriterSettings settings) {
 		this((Writer) null, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param writer   the output resource that will receive TSV records produced by this class.
-	 * @param settings the TSV writer configuration
+	 * @param writer   the output resource that will receive CSV records produced by this class.
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(Writer writer, SsvWriterSettings settings) {
 		super(writer, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param file     the output file that will receive TSV records produced by this class.
-	 * @param settings the TSV writer configuration
+	 * @param file     the output file that will receive CSV records produced by this class.
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(File file, SsvWriterSettings settings) {
 		super(file, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param file     the output file that will receive TSV records produced by this class.
+	 * @param file     the output file that will receive CSV records produced by this class.
 	 * @param encoding the encoding of the file
-	 * @param settings the TSV writer configuration
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(File file, String encoding, SsvWriterSettings settings) {
 		super(file, encoding, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param file     the output file that will receive TSV records produced by this class.
+	 * @param file     the output file that will receive CSV records produced by this class.
 	 * @param encoding the encoding of the file
-	 * @param settings the TSV writer configuration
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(File file, Charset encoding, SsvWriterSettings settings) {
 		super(file, encoding, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param output   the output stream that will be written with the TSV records produced by this class.
-	 * @param settings the TSV writer configuration
+	 * @param output   the output stream that will be written with the CSV records produced by this class.
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(OutputStream output, SsvWriterSettings settings) {
 		super(output, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param output   the output stream that will be written with the TSV records produced by this class.
+	 * @param output   the output stream that will be written with the CSV records produced by this class.
 	 * @param encoding the encoding of the stream
-	 * @param settings the TSV writer configuration
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(OutputStream output, String encoding, SsvWriterSettings settings) {
 		super(output, encoding, settings);
 	}
 
 	/**
-	 * The TsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
+	 * The CsvWriter supports all settings provided by {@link SsvWriterSettings}, and requires this configuration to be properly initialized.
 	 *
-	 * @param output   the output stream that will be written with the TSV records produced by this class.
+	 * @param output   the output stream that will be written with the CSV records produced by this class.
 	 * @param encoding the encoding of the stream
-	 * @param settings the TSV writer configuration
+	 * @param settings the CSV writer configuration
 	 */
 	public SsvWriter(OutputStream output, Charset encoding, SsvWriterSettings settings) {
 		super(output, encoding, settings);
 	}
 
 	/**
-	 * Initializes the TSV writer with TSV-specific configuration
+	 * Initializes the CSV writer with CSV-specific configuration
 	 *
-	 * @param settings the TSV writer configuration
+	 * @param settings the CSV writer configuration
 	 */
 	protected final void initialize(SsvWriterSettings settings) {
-		this.escapeChar = settings.getFormat().getEscapeChar();
-		this.escapedTabChar = settings.getFormat().getEscapedTabChar();
+		SsvFormat format = settings.getFormat();
+		this.separator = format.getDelimiter();
+		this.quoteChar = format.getQuote();
+		this.escapeChar = format.getQuoteEscape();
+		this.escapeEscape = settings.getFormat().getCharToEscapeQuoteEscaping();
+		this.newLine = format.getNormalizedNewline();
+
+		this.quoteAllFields = settings.getQuoteAllFields();
 		this.ignoreLeading = settings.getIgnoreLeadingWhitespaces();
 		this.ignoreTrailing = settings.getIgnoreTrailingWhitespaces();
-		this.joinLines = settings.isLineJoiningEnabled();
-		this.newLine = settings.getFormat().getNormalizedNewline();
+		this.escapeUnquoted = settings.isEscapeUnquotedValues();
+		this.inputNotEscaped = !settings.isInputEscaped();
+		this.dontProcessNormalizedNewLines = !settings.isNormalizeLineEndingsWithinQuotes();
+
+		this.quotationTriggers = null;
+		this.maxTrigger = 0;
+
+		int triggerCount = settings.getQuotationTriggers().length;
+		int offset = settings.isQuoteEscapingEnabled() ? 1 : 0;
+		char[] tmp = Arrays.copyOf(settings.getQuotationTriggers(), triggerCount + offset);
+		if (offset == 1) {
+			tmp[triggerCount] = quoteChar;
+		}
+
+		for (int i = 0; i < tmp.length; i++) {
+			if (maxTrigger < tmp[i]) {
+				maxTrigger = tmp[i];
+			}
+		}
+		if (maxTrigger != 0) {
+			maxTrigger++;
+			this.quotationTriggers = new boolean[maxTrigger];
+			Arrays.fill(quotationTriggers, false);
+			for (int i = 0; i < tmp.length; i++) {
+				quotationTriggers[tmp[i]] = true;
+			}
+		}
 	}
 
 	@Override
 	protected void processRow(Object[] row) {
 		for (int i = 0; i < row.length; i++) {
 			if (i != 0) {
-				appendToRow('\t');
+				appendToRow(separator);
+			}
+
+			if (dontProcessNormalizedNewLines) {
+				appender.enableDenormalizedLineEndings(false);
 			}
 
 			String nextElement = getStringValue(row[i]);
-
 			int originalLength = appender.length();
-			append(nextElement);
+			boolean isElementQuoted = append(quoteAllFields, nextElement);
 
 			//skipped all whitespaces and wrote nothing
-			if (appender.length() == originalLength && nullValue != null && !nullValue.isEmpty()) {
-				append(nullValue);
+			if (appender.length() == originalLength) {
+				if (isElementQuoted) {
+					if (nextElement == null) {
+						append(false, nullValue);
+					} else {
+						append(true, emptyValue);
+					}
+				} else if (nextElement == null) {
+					append(false, nullValue);
+				} else {
+					append(false, emptyValue);
+				}
 			}
 
-			appendValueToRow();
+			if (isElementQuoted) {
+				appendToRow(quoteChar);
+				appendValueToRow();
+				appendToRow(quoteChar);
+				if (dontProcessNormalizedNewLines) {
+					appender.enableDenormalizedLineEndings(true);
+				}
+			} else {
+				appendValueToRow();
+			}
 		}
 	}
 
-	private void append(String element) {
-		if (element == null) {
-			element = nullValue;
+
+	private boolean quoteElement(int start, String element) {
+		final int length = element.length();
+		if (maxTrigger == 0) {
+			for (int i = start; i < length; i++) {
+				char nextChar = element.charAt(i);
+				if (nextChar == separator || nextChar == newLine) {
+					return true;
+				}
+			}
+		} else {
+			for (int i = start; i < length; i++) {
+				char nextChar = element.charAt(i);
+				if (nextChar == separator || nextChar == newLine || nextChar < maxTrigger && quotationTriggers[nextChar]) {
+					return true;
+				}
+			}
 		}
 
+		return false;
+	}
+
+	// TODO: some magic needed here.
+	private boolean append(boolean isElementQuoted, String element) {
 		if (element == null) {
-			return;
+			if (nullValue == null) {
+				return isElementQuoted;
+			}
+			element = nullValue;
 		}
 
 		int start = 0;
@@ -175,24 +255,78 @@ public class SsvWriter extends AbstractWriter<SsvWriterSettings> {
 		}
 
 		final int length = element.length();
+		if (start < length && element.charAt(start) == quoteChar) {
+			isElementQuoted = true;
+		}
+
+		if (isElementQuoted) {
+			if (usingNullOrEmptyValue && length >= 2) {
+				if (element.charAt(0) == quoteChar && element.charAt(length - 1) == quoteChar) {
+					appender.append(element);
+					return false;
+				} else {
+					appendQuoted(start, element);
+					return true;
+				}
+			} else {
+				appendQuoted(start, element);
+				return true;
+			}
+		}
 
 		int i = start;
 		char ch = '\0';
 		for (; i < length; i++) {
 			ch = element.charAt(i);
-			if (ch == '\t' || ch == '\n' || ch == '\r' || ch == '\\') {
+			if (ch == quoteChar || ch == separator || ch == newLine || ch == escapeChar || (ch < maxTrigger && quotationTriggers[ch])) {
 				appender.append(element, start, i);
 				start = i + 1;
-				appender.append(escapeChar);
-				if (ch == '\t') {
-					appender.append(escapedTabChar);
-				} else if (ch == '\n') {
-					appender.append(joinLines ? newLine : 'n');
-				} else if (ch == '\\') {
-					appender.append('\\');
-				} else {
-					appender.append(joinLines ? newLine : 'r');
+
+				if (ch == quoteChar || ch == escapeChar) {
+					if (quoteElement(i, element)) {
+						appendQuoted(i, element);
+						return true;
+					} else if (escapeUnquoted) {
+						appendQuoted(i, element);
+					} else {
+						appender.append(element, i, length);
+						if (ignoreTrailing && element.charAt(length - 1) <= ' ' && whitespaceRangeStart < element.charAt(length - 1)) {
+							appender.updateWhitespace();
+						}
+					}
+					return isElementQuoted;
+				} else if (ch == escapeChar && inputNotEscaped && escapeEscape != '\0' && escapeUnquoted) {
+					appender.append(escapeEscape);
+				} else if (ch == separator || ch == newLine || ch < maxTrigger && quotationTriggers[ch]) {
+					appendQuoted(i, element);
+					return true;
 				}
+				appender.append(ch);
+			}
+		}
+
+		appender.append(element, start, i);
+		if (ch <= ' ' && ignoreTrailing && whitespaceRangeStart < ch) {
+			appender.updateWhitespace();
+		}
+		return isElementQuoted;
+	}
+
+	private void appendQuoted(int start, String element) {
+		final int length = element.length();
+		int i = start;
+		char ch = '\0';
+		for (; i < length; i++) {
+			ch = element.charAt(i);
+			if (ch == quoteChar || ch == newLine || ch == escapeChar) {
+				appender.append(element, start, i);
+				start = i + 1;
+				if (ch == quoteChar && inputNotEscaped) {
+					appender.append(escapeChar);
+				} else if (ch == escapeChar && inputNotEscaped && escapeEscape != '\0') {
+					appender.append(escapeEscape);
+				}
+				appender.append(ch);
 			}
 		}
 		appender.append(element, start, i);

@@ -16,48 +16,48 @@
 
 package com.univocity.parsers.ssv;
 
-import com.univocity.parsers.common.routine.AbstractRoutines;
+import com.univocity.parsers.common.routine.*;
 
-import java.io.Writer;
-
+import java.io.*;
+// TODO: docs/comments
 /**
- * A collection of common routines involving the processing of TSV data.
+ * A collection of common routines involving the processing of CSV data.
  */
 public class SsvRoutines extends AbstractRoutines<SsvParserSettings, SsvWriterSettings> {
 
 	/**
-	 * Creates a new instance of the TSV routine class without any predefined parsing/writing configuration.
+	 * Creates a new instance of the CSV routine class without any predefined parsing/writing configuration.
 	 */
 	public SsvRoutines() {
 		this(null, null);
 	}
 
 	/**
-	 * Creates a new instance of the TSV routine class.
+	 * Creates a new instance of the CSV routine class.
 	 *
-	 * @param parserSettings configuration to use for TSV parsing
+	 * @param parserSettings configuration to use for CSV parsing
 	 */
 	public SsvRoutines(SsvParserSettings parserSettings) {
 		this(parserSettings, null);
 	}
 
 	/**
-	 * Creates a new instance of the TSV routine class.
+	 * Creates a new instance of the CSV routine class.
 	 *
-	 * @param writerSettings configuration to use for TSV writing
+	 * @param writerSettings configuration to use for CSV writing
 	 */
 	public SsvRoutines(SsvWriterSettings writerSettings) {
 		this(null, writerSettings);
 	}
 
 	/**
-	 * Creates a new instance of the TSV routine class.
+	 * Creates a new instance of the CSV routine class.
 	 *
-	 * @param parserSettings configuration to use for TSV parsing
-	 * @param writerSettings configuration to use for TSV writing
+	 * @param parserSettings configuration to use for CSV parsing
+	 * @param writerSettings configuration to use for CSV writing
 	 */
 	public SsvRoutines(SsvParserSettings parserSettings, SsvWriterSettings writerSettings) {
-		super("TSV parsing/writing routine", parserSettings, writerSettings);
+		super("CSV parsing/writing routine", parserSettings, writerSettings);
 	}
 
 	@Override

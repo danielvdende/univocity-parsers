@@ -15,81 +15,192 @@
  ******************************************************************************/
 package com.univocity.parsers.ssv;
 
-import com.univocity.parsers.common.Format;
+import com.univocity.parsers.common.*;
 
-import java.util.TreeMap;
-
+import java.util.*;
+// TODO: fix docs/comments
 /**
- * The TSV format configuration, for tab-separated inputs. It offers the options in the default configuration in {@link Format}, as well as
- * the {@link #escapeChar} character for escaping \t, \n, \r and \ in TSV values.
+ * The CSV format configuration. In addition to the default configuration in {@link Format}, the CSV format defines:
  *
- * Delimiters are defined as tab characters '\t'
- *
- * @see Format
+ * <ul>
+ * <li><b>delimiter <i>(defaults to ',')</i>: </b> the field delimiter character. Used to separate individual fields in a CSV record (where the record is usually a line of text with multiple fields).
+ * <p>e.g. the value  a , b  is parsed as [ a ][ b ]</li>
+ * <li><b>quote <i>(defaults to '"')</i>:</b> character used for escaping values where the field delimiter is part of the value.
+ * <p>e.g. the value " a , b " is parsed as [ a , b ] (instead of [ a ][ b ]</li>
+ * <li><b>quoteEscape  <i>(defaults to '"')</i>:</b> character used for escaping the quote character inside an already quoted value
+ * <p>e.g. the value " "" a , b "" " is parsed as [ " a , b " ]  (instead of [ " a ][ b " ] or [ "" a , b "" ])</li>
+ * <li><b>charToEscapeQuoteEscaping  <i>(defaults to '\0' - undefined)</i>:</b> character used for escaping the escape for the quote character
+ * <p>e.g. if the quoteEscape and charToEscapeQuoteEscaping are set to '\', the value " \\\" a , b \\\" " is parsed as [ \" a , b \" ]</li>
+ * </ul>
  *
  * @author uniVocity Software Pty Ltd - <a href="mailto:parsers@univocity.com">parsers@univocity.com</a>
- *
+ * @see com.univocity.parsers.common.Format
  */
 public class SsvFormat extends Format {
-
-	private char escapeChar = '\\';
-	private char escapedTabChar = 't';
+	private char quote = '"';
+	private char quoteEscape = '"';
+	private String delimiter = ","; // TODO: decide what the appropriate default value for this should be.
+	private int delimiterLength = delimiter.length();
+	private Character charToEscapeQuoteEscaping = null;
 
 	/**
-	 * Defines the character used for escaping special characters in TSV inputs: \t, \n, \r and \ . Defaults to '\\'
-	 * @param escapeChar the escape character
+	 * Returns the character used for escaping values where the field delimiter is part of the value. Defaults to '"'
+	 *
+	 * @return the quote character
 	 */
-	public void setEscapeChar(char escapeChar) {
-		this.escapeChar = escapeChar;
+	public char getQuote() {
+		return quote;
 	}
 
 	/**
-	 * Returns the character used for escaping special characters in TSV inputs: \t, \n, \r and \
-	 * @return the escape character.
+	 * Defines the character used for escaping values where the field delimiter is part of the value. Defaults to '"'
+	 *
+	 * @param quote the quote character
 	 */
-	public char getEscapeChar() {
-		return escapeChar;
+	public void setQuote(char quote) {
+		this.quote = quote;
 	}
 
 	/**
-	 * Returns the character that should be used to represent an escaped tab, i.e. the character before the defined
-	 * {@link #getEscapeChar()}. For example, if {@link #getEscapeChar()} == '\\' and {@link #getEscapedTabChar() == 'X'},
-	 * the sequence {@code '\X'} will identify a tab.
+	 * Identifies whether or not a given character is used for escaping values where the field delimiter is part of the value
 	 *
-	 * Defaults to {@code 't'}.
-	 *
-	 * @return the character following the {@link #getEscapeChar()} that represents an escaped tab.
-	 */
-	public char getEscapedTabChar() {
-		return escapedTabChar;
-	}
-
-	/**
-	 * Defines the character that should be used to represent an escaped tab, i.e. the character before the defined
-	 * {@link #getEscapeChar()}. For example, if {@link #getEscapeChar()} == '\\' and {@link #getEscapedTabChar() == 'X'},
-	 * the sequence {@code '\X'} will identify a tab.
-	 *
-	 * Defaults to {@code 't'}.
-	 *
-	 * @param escapedTabChar the character following the {@link #getEscapeChar()} that represents an escaped tab.
-	 */
-	public void setEscapedTabChar(char escapedTabChar) {
-		this.escapedTabChar = escapedTabChar;
-	}
-
-	/**
-	 * Identifies whether or not a given character is used for escaping special characters in TSV (\t, \n, \r and \).
 	 * @param ch the character to be verified
-	 * @return true if the given character is escape character, false otherwise
+	 *
+	 * @return true if the given character is the character used for escaping values, false otherwise
 	 */
-	public boolean isEscapeChar(char ch) {
-		return this.escapeChar == ch;
+	public boolean isQuote(char ch) {
+		return this.quote == ch;
+	}
+
+	/**
+	 * Returns the character used for escaping quotes inside an already quoted value. Defaults to '"'
+	 *
+	 * @return the quote escape character
+	 */
+	public char getQuoteEscape() {
+		return quoteEscape;
+	}
+
+	/**
+	 * Defines the character used for escaping quotes inside an already quoted value. Defaults to '"'
+	 *
+	 * @param quoteEscape the quote escape character
+	 */
+	public void setQuoteEscape(char quoteEscape) {
+		this.quoteEscape = quoteEscape;
+	}
+
+	/**
+	 * Identifies whether or not a given character is used for escaping quotes inside an already quoted value.
+	 *
+	 * @param ch the character to be verified
+	 *
+	 * @return true if the given character is the quote escape character, false otherwise
+	 */
+	public boolean isQuoteEscape(char ch) {
+		return this.quoteEscape == ch;
+	}
+
+	/**
+	 * Returns the field delimiter string. Defaults to ","
+	 *
+	 * @return the field delimiter string
+	 */
+	public String getDelimiter() {
+		return delimiter;
+	}
+
+	/**
+	 * Defines the field delimiter character. Defaults to ","
+	 *
+	 * @param delimiter the field delimiter string
+	 */
+	public void setDelimiter(String delimiter) {
+		this.delimiter = delimiter;
+		this.delimiterLength = this.delimiter.length();
+	}
+
+	public int getDelimiterLength() { return delimiterLength; }
+
+	/**
+	 * Identifies whether or not a given character represents a field delimiter
+	 *
+	 * @param ch the character to be verified
+	 *
+	 * @return true if the given character is the field delimiter character, false otherwise
+	 */
+	public boolean isDelimiter(String ch) {
+		return this.delimiter.equals(ch);
+	}
+
+	/**
+	 * Returns the character used to escape the character used for escaping quotes defined by {@link #getQuoteEscape()}.
+	 * For example, if the quote escape is set to '\', and the quoted value ends with: \", as in the following example:
+	 *
+	 * <p>
+	 * [ " a\\", b ]
+	 * </p>
+	 *
+	 * Then:
+	 * <ul>
+	 * <li>If the character to escape the '\' is undefined, the record won't be parsed. The parser will read characters: [a],[\],["],[,],[ ],[b] and throw an error because it cannot find a closing quote</li>
+	 * <li>If the character to escape the '\' is defined as '\', the record will be read with 2 values: [a\] and [b]</li>
+	 * </ul>
+	 * Defaults to '\0' (undefined)
+	 *
+	 * @return the character to escape the character used for escaping quotes defined
+	 */
+	public final char getCharToEscapeQuoteEscaping() {
+		if (charToEscapeQuoteEscaping == null) { //not provided by the user
+			if (quote == quoteEscape) {
+				return '\0'; //not required
+			} else {
+				return quoteEscape;
+			}
+		}
+		return charToEscapeQuoteEscaping;
+	}
+
+	/**
+	 * Defines the character used to escape the character used for escaping quotes defined by {@link #getQuoteEscape()}.
+	 * For example, if the quote escape is set to '\', and the quoted value ends with: \", as in the following example:
+	 *
+	 * <p>
+	 * [ " a\\", b ]
+	 * </p>
+	 *
+	 * Then:
+	 * <ul>
+	 * <li>If the character to escape the '\' is undefined, the record won't be parsed. The parser will read characters: [a],[\],["],[,],[ ],[b] and throw an error because it cannot find a closing quote</li>
+	 * <li>If the character to escape the '\' is defined as '\', the record will be read with 2 values: [a\] and [b]</li>
+	 * </ul>
+	 * Defaults to '\0' (undefined)
+	 *
+	 * @param charToEscapeQuoteEscaping the character to escape the character used for escaping quotes defined
+	 */
+	public final void setCharToEscapeQuoteEscaping(char charToEscapeQuoteEscaping) {
+		this.charToEscapeQuoteEscaping = charToEscapeQuoteEscaping;
+	}
+
+	/**
+	 * Identifies whether or not a given character is used to escape the character used for escaping quotes defined by {@link #getQuoteEscape()}.
+	 *
+	 * @param ch the character to be verified
+	 *
+	 * @return true if the given character is used to escape the quote escape character, false otherwise
+	 */
+	public final boolean isCharToEscapeQuoteEscaping(char ch) {
+		char current = getCharToEscapeQuoteEscaping();
+		return current != '\0' && current == ch;
 	}
 
 	@Override
 	protected TreeMap<String, Object> getConfiguration() {
 		TreeMap<String, Object> out = new TreeMap<String, Object>();
-		out.put("Escape character", escapeChar);
+		out.put("Quote character", quote);
+		out.put("Quote escape character", quoteEscape);
+		out.put("Quote escape escape character", charToEscapeQuoteEscaping);
+		out.put("Field delimiter", delimiter);
 		return out;
 	}
 
