@@ -56,6 +56,9 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 	private final String nullValue;
 	private final int maxColumnLength;
 
+	private int delimiterPointer;
+	private String partialDelimiter;
+
 	/**
 	 * The CsvParser supports all settings provided by {@link SsvParserSettings}, and requires this configuration to be properly initialized.
 	 *
@@ -73,6 +76,8 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 		normalizeLineEndingsInQuotes = settings.isNormalizeLineEndingsWithinQuotes();
 		nullValue = settings.getNullValue();
 		maxColumnLength = settings.getMaxCharsPerColumn();
+		delimiterPointer = 0;
+		partialDelimiter = "";
 
 
 		SsvFormat format = settings.getFormat();
@@ -113,11 +118,30 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 			if (ch <= ' ' && ignoreLeadingWhitespace && whitespaceRangeStart < ch) {
 				ch = input.skipWhitespace(ch, delimiter.charAt(0), quote);
 			}
-            // TODO: we probably need to maintain a pointer to show whether or not we are in the middle of reading
-            // the delimiter
-			if (ch == delimiter || ch == newLine) {
-				output.emptyParsed();
+            // Use a pointer to check where in the delimiter we are.
+			// case 1: delimiter first char is match, n-th isn't -> we need to parse char 1 as normal value.
+			// case 2: delimiter first char is match, others are too -> treat string as delimiter, do not parse.
+			if(ch == delimiter.charAt(delimiterPointer)){
+				// this means we are still parsing the delimiter.
+				partialDelimiter += delimiter.charAt(delimiterPointer);
+				if(partialDelimiter.equals(delimiter)){
+					// we have a full delimiter now.
+					output.emptyParsed();
+					// reset our pointer/partialdelimiter
+					partialDelimiter = "";
+					delimiterPointer = 0;
+				} else {
+					// keep going with delimiter parsing
+					delimiterPointer++;
+				}
 			} else {
+				// the delimiter ended, so reset the pointer and partial delimiter
+				delimiterPointer = 0;
+				partialDelimiter = "";
+
+				if(ch == newLine) {
+					output.emptyParsed();
+				}
 				unescaped = false;
 				prev = '\0';
 				if (ch == quote) {
@@ -133,14 +157,14 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 				} else if (doNotEscapeUnquotedValues) {
 					String value = null;
 					if (output.appender.length() == 0) {
-						value = input.getString(ch, delimiter, ignoreTrailingWhitespace, nullValue, maxColumnLength);
+						value = input.getString(ch, delimiter.charAt(0), ignoreTrailingWhitespace, nullValue, maxColumnLength);
 					}
 					if (value != null) {
 						output.valueParsed(value);
 						ch = input.getChar();
 					} else {
 						output.trim = ignoreTrailingWhitespace;
-						ch = output.appender.appendUntil(ch, input, delimiter, newLine);
+						ch = output.appender.appendUntil(ch, input, delimiter.charAt(0), newLine);
 						output.valueParsed();
 					}
 				} else {
@@ -160,7 +184,7 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 
 	private void skipValue() {
 		output.appender.reset();
-		ch = NoopCharAppender.getInstance().appendUntil(ch, input, delimiter, newLine);
+		ch = NoopCharAppender.getInstance().appendUntil(ch, input, delimiter.charAt(0), newLine);
 	}
 
 	private void handleValueSkipping(boolean quoted) {
@@ -229,7 +253,7 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 	}
 
 	private void parseValueProcessingEscape() {
-		while (ch != delimiter && ch != newLine) {
+		while (ch != delimiter.charAt(0) && ch != newLine) {
 			if (ch != quote && ch != quoteEscape) {
 				if (prev == quote) { //unescaped quote detected
 					handleUnescapedQuoteInValue();
@@ -255,14 +279,14 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 			}
 			ch = input.nextChar();
 			output.trim = ignoreTrailingWhitespace;
-			ch = output.appender.appendUntil(ch, input, delimiter, newLine);
+			ch = output.appender.appendUntil(ch, input, delimiter.charAt(0), newLine);
 		} else {
 			if (keepQuotes && prev == '\0') {
 				output.appender.append(quote);
 			}
 			ch = input.nextChar();
 			while (true) {
-				if (prev == quote && (ch <= ' ' && whitespaceRangeStart < ch || ch == delimiter || ch == newLine)) {
+				if (prev == quote && (ch <= ' ' && whitespaceRangeStart < ch || ch == delimiter.charAt(0) || ch == newLine)) {
 					break;
 				}
 
@@ -284,14 +308,14 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 					processQuoteEscape();
 					prev = ch;
 					ch = input.nextChar();
-					if(unescaped && ch == delimiter || ch == newLine){
+					if(unescaped && ch == delimiter.charAt(0) || ch == newLine){
 						return;
 					}
 				}
 			}
 
 			// handles whitespaces after quoted value: whitespaces are ignored. Content after whitespaces may be parsed if 'parseUnescapedQuotes' is enabled.
-			if (ch != delimiter && ch != newLine && ch <= ' ' && whitespaceRangeStart < ch) {
+			if (ch != delimiter.charAt(0) && ch != newLine && ch <= ' ' && whitespaceRangeStart < ch) {
 				whitespaceAppender.reset();
 				do {
 					//saves whitespaces after value
@@ -304,7 +328,7 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 				} while (ch <= ' ' && whitespaceRangeStart < ch);
 
 				//there's more stuff after the quoted value, not only empty spaces.
-				if (ch != delimiter && parseUnescapedQuotes) {
+				if (ch != delimiter.charAt(0) && parseUnescapedQuotes) {
 					if (output.appender instanceof DefaultCharAppender) {
 						//puts the quote before whitespaces back, then restores the whitespaces
 						output.appender.append(quote);
@@ -326,30 +350,10 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 				output.appender.append(quote);
 			}
 
-			if (ch != delimiter && ch != newLine) {
+			if (ch != delimiter.charAt(0) && ch != newLine) {
 				throw new TextParsingException(context, "Unexpected character '" + ch + "' following quoted value of CSV field. Expecting '" + delimiter + "'. Cannot parse CSV input.");
 			}
 		}
-	}
-
-	@Override
-	protected final InputAnalysisProcess getInputAnalysisProcess() {
-		if (settings.isDelimiterDetectionEnabled() || settings.isQuoteDetectionEnabled()) {
-			return new SsvFormatDetector(20, settings, whitespaceRangeStart) {
-				@Override
-				void apply(String delimiter, char quote, char quoteEscape) {
-					if (settings.isDelimiterDetectionEnabled()) {
-						SsvParser.this.delimiter = delimiter;
-
-					}
-					if (settings.isQuoteDetectionEnabled()) {
-						SsvParser.this.quote = quote;
-						SsvParser.this.quoteEscape = quoteEscape;
-					}
-				}
-			};
-		}
-		return null;
 	}
 
 	/**
