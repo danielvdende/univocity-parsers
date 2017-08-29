@@ -115,27 +115,31 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 		}
 
 		while (ch != newLine) {
+			// we are now parsing a single line.
+
+			// first check if the current character is empty
 			if (ch <= ' ' && ignoreLeadingWhitespace && whitespaceRangeStart < ch) {
 				ch = input.skipWhitespace(ch, delimiter.charAt(0), quote);
 			}
+
+			// now we need to first process through the delimiter, before moving on to parsing an actual value.
             // Use a pointer to check where in the delimiter we are.
 			// case 1: delimiter first char is match, n-th isn't -> we need to parse char 1 as normal value.
 			// case 2: delimiter first char is match, others are too -> treat string as delimiter, do not parse.
-			if(ch == delimiter.charAt(delimiterPointer)){
+			while(ch == delimiter.charAt(delimiterPointer)){
 				// this means we are still parsing the delimiter.
 				partialDelimiter += delimiter.charAt(delimiterPointer);
 				if(partialDelimiter.equals(delimiter)){
 					// we have a full delimiter now.
 					output.emptyParsed();
-					// reset our pointer/partialdelimiter
-					partialDelimiter = "";
-					delimiterPointer = 0;
+					break;
 				} else {
 					// keep going with delimiter parsing
 					delimiterPointer++;
+					ch = input.nextChar();
 				}
-			} else {
-				// the delimiter ended, so reset the pointer and partial delimiter
+			}
+			// the delimiter ended, so reset the pointer and partial delimiter
 				delimiterPointer = 0;
 				partialDelimiter = "";
 
@@ -157,17 +161,26 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 				} else if (doNotEscapeUnquotedValues) {
 					String value = null;
 					if (output.appender.length() == 0) {
+						// this function comes from AbstractCharInputReader. It gets there because DefaultCharInputReader extends this abstract class,
+						// which in turn implements the Interface CharInputReader.
+						// This is where the library actually gets the value out of the text file
 						value = input.getString(ch, delimiter.charAt(0), ignoreTrailingWhitespace, nullValue, maxColumnLength);
+						// TODO: the reason this causes problems, is that the 'second' part of the delimiter does not
+						// get included. It may be wortwhile updating the getString method to make it easier to call here.
 					}
+
+					// check if there was any value, if so, append it to the output.
 					if (value != null) {
 						output.valueParsed(value);
 						ch = input.getChar();
 					} else {
 						output.trim = ignoreTrailingWhitespace;
+						System.out.println(ch);
 						ch = output.appender.appendUntil(ch, input, delimiter.charAt(0), newLine);
 						output.valueParsed();
 					}
 				} else {
+					// TODO: figure out how this one works.
 					output.trim = ignoreTrailingWhitespace;
 					parseValueProcessingEscape();
 					output.valueParsed();
@@ -179,7 +192,7 @@ public final class SsvParser extends AbstractParser<SsvParserSettings> {
 					output.emptyParsed();
 				}
 			}
-		}
+
 	}
 
 	private void skipValue() {

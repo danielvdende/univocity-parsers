@@ -39,7 +39,7 @@ import java.util.*;
 public class SsvFormat extends Format {
 	private char quote = '"';
 	private char quoteEscape = '"';
-	private String delimiter = "#-#"; // TODO: decide what the appropriate default value for this should be.
+	private String delimiter = "##"; // TODO: decide what the appropriate default value for this should be.
 	private int delimiterLength = delimiter.length();
 	private Character charToEscapeQuoteEscaping = null;
 
