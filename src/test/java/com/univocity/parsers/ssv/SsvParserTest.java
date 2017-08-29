@@ -22,7 +22,8 @@ import com.univocity.parsers.common.record.*;
 import org.testng.annotations.*;
 
 import java.io.*;
-import java.net.*;
+//TODO: verify that this import isn't needed.
+//import java.net.*;
 import java.util.*;
 
 import static org.testng.Assert.*;
@@ -32,20 +33,20 @@ public class SsvParserTest extends ParserTestCase {
 	@DataProvider(name = "testProvider")
 	public Object[][] testProvider() {
 		return new Object[][]{
-				{"/csv/test.csv", new char[]{'\n'}},
-				{"/csv/test.csv", null}
+				{"/ssv/test.ssv", new char[]{'\n'}},
+				{"/ssv/test.ssv", null}
 		};
 	}
 
 	@DataProvider(name = "csvProvider")
 	public Object[][] csvProvider() {
 		return new Object[][]{
-				{"/csv/essential.csv", new char[]{'\n'}},
-				{"/csv/essential-dos.csv", new char[]{'\r', '\n'}},
-				{"/csv/essential-mac.csv", new char[]{'\r'}},
-				{"/csv/essential.csv", null},
-				{"/csv/essential-dos.csv", null},
-				{"/csv/essential-mac.csv", null}
+				{"/ssv/essential.ssv", new char[]{'\n'}},
+				{"/ssv/essential-dos.ssv", new char[]{'\r', '\n'}},
+				{"/ssv/essential-mac.ssv", new char[]{'\r'}},
+				{"/ssv/essential.ssv", null},
+				{"/ssv/essential-dos.ssv", null},
+				{"/ssv/essential-mac.ssv", null}
 		};
 	}
 
@@ -750,36 +751,5 @@ public class SsvParserTest extends ParserTestCase {
 		assertEquals(line.length, 2);
 		assertEquals(line[0], "a");
 		assertEquals(line[1], "b, \1");
-	}
-
-	@Test
-	public void testParserIteratorOnFile() throws Exception {
-		SsvParserSettings parserSettings = new SsvParserSettings();
-		parserSettings.setLineSeparatorDetectionEnabled(true);
-
-		SsvParser parser = new SsvParser(parserSettings);
-
-		String[][] correctRows = {
-				{"a", "b", "c"},
-				{"d", "e", "f"},
-				{"g", "h", "i"},
-				{"j", null},
-				{"k", "l"},
-				{"m", "n", "o", "p", "q", "r"}
-		};
-
-		File input = getFile("/csv/iterating_test.csv");
-		int i = 0;
-		for (String[] row : parser.iterate(input, "UTF-8")) {
-			assertEquals(row, correctRows[i++]);
-		}
-		i = 0;
-		for (Record row : parser.iterateRecords(new FileInputStream(input), "UTF-8")) {
-			assertEquals(row.getValues(), correctRows[i++]);
-		}
-
-		for (Record row : parser.iterateRecords(new StringReader(""))) {
-			fail("Empty input, should not get here");
-		}
 	}
 }

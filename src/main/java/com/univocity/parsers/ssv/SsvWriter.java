@@ -179,7 +179,9 @@ public class SsvWriter extends AbstractWriter<SsvWriterSettings> {
 	protected void processRow(Object[] row) {
 		for (int i = 0; i < row.length; i++) {
 			if (i != 0) {
-				appendToRow(separator);
+				for (int j = 0; j < separator.length() ; j++){
+					appendToRow(separator.charAt(j));
+				}
 			}
 
 			if (dontProcessNormalizedNewLines) {
@@ -224,14 +226,14 @@ public class SsvWriter extends AbstractWriter<SsvWriterSettings> {
 		if (maxTrigger == 0) {
 			for (int i = start; i < length; i++) {
 				char nextChar = element.charAt(i);
-				if (nextChar == separator || nextChar == newLine) {
+				if (nextChar == separator.charAt(0) || nextChar == newLine) {
 					return true;
 				}
 			}
 		} else {
 			for (int i = start; i < length; i++) {
 				char nextChar = element.charAt(i);
-				if (nextChar == separator || nextChar == newLine || nextChar < maxTrigger && quotationTriggers[nextChar]) {
+				if (nextChar == separator.charAt(0) || nextChar == newLine || nextChar < maxTrigger && quotationTriggers[nextChar]) {
 					return true;
 				}
 			}
@@ -278,7 +280,8 @@ public class SsvWriter extends AbstractWriter<SsvWriterSettings> {
 		char ch = '\0';
 		for (; i < length; i++) {
 			ch = element.charAt(i);
-			if (ch == quoteChar || ch == separator || ch == newLine || ch == escapeChar || (ch < maxTrigger && quotationTriggers[ch])) {
+			// FIXME: this needs to be fixed
+			if (ch == quoteChar || ch == separator.charAt(0) || ch == newLine || ch == escapeChar || (ch < maxTrigger && quotationTriggers[ch])) {
 				appender.append(element, start, i);
 				start = i + 1;
 
@@ -297,7 +300,8 @@ public class SsvWriter extends AbstractWriter<SsvWriterSettings> {
 					return isElementQuoted;
 				} else if (ch == escapeChar && inputNotEscaped && escapeEscape != '\0' && escapeUnquoted) {
 					appender.append(escapeEscape);
-				} else if (ch == separator || ch == newLine || ch < maxTrigger && quotationTriggers[ch]) {
+					// FIXME: same as fixme above.
+				} else if (ch == separator.charAt(0) || ch == newLine || ch < maxTrigger && quotationTriggers[ch]) {
 					appendQuoted(i, element);
 					return true;
 				}
